@@ -1,0 +1,10 @@
+[Unit]
+Description=OneDrive rclone sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/onedrive-sync.sh
+StandardOutput=journal
+StandardError=journal
