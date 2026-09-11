@@ -1,0 +1,151 @@
+# OneDrive Synchronizer for Linux (rclone + systemd)
+
+This project provides an automatic, two-way synchronization solution between multiple local folders on Linux and Microsoft OneDrive. It relies on `rclone bisync`, Bash scripts with exclusive file locking (`flock`), and a user-level `systemd` timer.
+
+---
+
+## 1. How It Works
+
+The system allows you to synchronize multiple folders independently without modifying the synchronization scripts.
+
+Synchronization relies on `rclone bisync` with the `--conflict-resolve newer` option. Conflicts are resolved automatically by keeping the newest file. An automatic lock prevents multiple instances of the script from running at the same time.
+
+---
+
+## 2. Installed File Structure
+
+The installation creates the following files in your home directory:
+
+* **Configuration file**
+  * `~/.config/onedrive-sync/config.env`: Defines the rclone remote name, the list of folders to synchronize (`SYNC_N`), the sync mode, and the log file location.
+
+* **Execution scripts**
+  * `~/bin/onedrive-sync.sh`: Main script executed periodically by the timer. It loops through the configuration and syncs each folder.
+  * `~/bin/onedrive-sync-resync.sh`: Initial setup script (baseline). It runs with the `--resync` flag for `rclone bisync`.
+
+* **systemd units (user level)**
+  * `~/.config/systemd/user/onedrive-sync.service`: A `oneshot` service unit that launches `~/bin/onedrive-sync.sh`.
+  * `~/.config/systemd/user/onedrive-sync.timer`: Timer that schedules the service execution 1 minute after boot, then every 5 minutes.
+
+---
+
+## 3. Multi-folder Configuration (`config.env`)
+
+All folder pairs are configured in `~/.config/onedrive-sync/config.env`.
+
+Each pair uses the following syntax:
+
+```bash
+SYNC_N="absolute_local_path:remote_name:relative_remote_path"
+```
+
+### Example Configuration
+
+```bash
+# Configured rclone remote
+RCLONE_REMOTE="onedrive"
+
+# List of folders to sync (SYNC_1, SYNC_2, SYNC_3, etc.)
+SYNC_1="/home/mac/Documents:onedrive:Documents"
+SYNC_2="/home/mac/Pictures:onedrive:Pictures"
+
+# Sync mode (bisync for bidirectional)
+SYNC_MODE="bisync"
+
+# Logging and exclusion options
+RCLONE_LOG_LEVEL="INFO"
+RCLONE_LOG_FILE="/home/mac/.config/onedrive-sync/sync.log"
+RCLONE_EXTRA_FLAGS="--exclude='.git/**' --exclude='node_modules/**'"
+```
+
+The `onedrive-sync.sh` script automatically detects variables starting with `SYNC_` followed by a number and processes each folder sequentially.
+
+---
+
+## 4. Why and When to Use `--resync`
+
+`rclone bisync` keeps a baseline history of the state of local and remote files in `~/.config/rclone/bisync/`.
+
+The first time you synchronize a folder, or when you add a new `SYNC_N` pair to the configuration, `rclone` does not have this history yet. You must run the `onedrive-sync-resync.sh` script once in this situation.
+
+### Role of `onedrive-sync-resync.sh`
+
+* Passes the `--resync` option to `rclone bisync`.
+* Compares all local and remote files to establish the initial baseline.
+* Creates the state files required for future incremental synchronizations to work.
+
+**Important:** Run this resynchronization script only once during initial setup or after adding a new folder. Regular automated synchronizations use `onedrive-sync.sh` afterward.
+
+---
+
+## 5. Step-by-Step Setup and Installation Guide
+
+Follow these steps to complete the installation and enable automatic synchronization.
+
+### Step 1: Configure the Rclone Remote
+
+If your OneDrive access is not configured in rclone yet, run the interactive setup command:
+
+```bash
+rclone config
+```
+
+1. Press `n` to create a new remote.
+2. Name the remote (for example, `onedrive`).
+3. Choose `Microsoft OneDrive` as the storage type.
+4. Leave the default client credentials (press Enter).
+5. Complete authentication in your web browser.
+6. Test the connection with the following command:
+
+```bash
+rclone lsd onedrive:
+```
+
+### Step 2: Edit the Configuration
+
+Open and modify the configuration file:
+
+```bash
+nano ~/.config/onedrive-sync/config.env
+```
+
+Make sure the variables (`SYNC_1`, `SYNC_2`, etc.) match your actual local and remote folders, and that the remote name matches the one configured in Step 1.
+
+### Step 3: Run the Initial Synchronization (Resync)
+
+Run the resynchronization script manually to create the initial baseline:
+
+```bash
+~/bin/onedrive-sync-resync.sh
+```
+
+Check the terminal to confirm the execution finishes with the status `Result: ALL PAIRS SUCCEEDED`.
+
+### Step 4: Enable the Systemd Timer
+
+Reload the user systemd configuration and enable the timer:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now onedrive-sync.timer
+```
+
+### Step 5: Check Status and View Logs
+
+To verify that the timer is active and see the next scheduled execution time:
+
+```bash
+systemctl --user status onedrive-sync.timer
+```
+
+To view the systemd service execution history:
+
+```bash
+journalctl --user -u onedrive-sync.service -f
+```
+
+To view the detailed log file generated by the scripts:
+
+```bash
+tail -f ~/.config/onedrive-sync/sync.log
+```
