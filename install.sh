@@ -36,8 +36,7 @@ success "Directories ready: $BIN_DIR, $SYSTEMD_DIR, $CONFIG_DIR"
 # Install scripts
 # ---------------------------------------------------------------------------
 header "==> Installing scripts to $BIN_DIR"
-install -m 755 "$SCRIPT_DIR/onedrive-sync.sh"        "$BIN_DIR/onedrive-sync.sh"
-install -m 755 "$SCRIPT_DIR/onedrive-sync-resync.sh" "$BIN_DIR/onedrive-sync-resync.sh"
+install -m 755 "$SCRIPT_DIR/onedrive-sync.sh" "$BIN_DIR/onedrive-sync.sh"
 success "Scripts installed."
 
 # ---------------------------------------------------------------------------
@@ -67,7 +66,6 @@ fi
 header "==> Adding shell aliases"
 
 ALIAS_SYNC='alias sync-onedrive="onedrive-sync.sh"'
-ALIAS_RESYNC='alias sync-onedrive-resync="onedrive-sync-resync.sh"'
 
 add_alias_to_rc() {
     local rc_file="$1"
@@ -83,7 +81,7 @@ add_alias_to_rc() {
         warn "Alias '${alias_name}' already exists in $rc_file — skipping."
     else
         echo "" >> "$rc_file"
-        echo "# OneDrive sync aliases (added by install.sh)" >> "$rc_file"
+        echo "# OneDrive sync alias (added by install.sh)" >> "$rc_file"
         echo "$alias_line" >> "$rc_file"
         success "Added '$alias_name' alias to $rc_file"
     fi
@@ -91,7 +89,6 @@ add_alias_to_rc() {
 
 for RC in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     add_alias_to_rc "$RC" "$ALIAS_SYNC"
-    add_alias_to_rc "$RC" "$ALIAS_RESYNC"
 done
 
 # Also ensure BIN_DIR is in PATH for shells that don't include it automatically
@@ -122,9 +119,9 @@ echo -e "       ${YELLOW}${CONFIG_FILE}${RESET}"
 echo -e "     Set your SYNC_1, SYNC_2 … pairs (local_path:remote:remote_path)."
 echo ""
 echo -e "  ${CYAN}3.${RESET} Run the initial baseline sync (required before scheduling):"
-echo -e "       ${YELLOW}${BIN_DIR}/onedrive-sync-resync.sh${RESET}"
+echo -e "       ${YELLOW}${BIN_DIR}/onedrive-sync.sh --resync${RESET}"
 echo -e "     Or, after reloading your shell:"
-echo -e "       ${YELLOW}sync-onedrive-resync${RESET}"
+echo -e "       ${YELLOW}sync-onedrive --resync${RESET}"
 echo ""
 echo -e "  ${CYAN}4.${RESET} Enable and start the automatic timer:"
 echo -e "       ${YELLOW}systemctl --user enable --now onedrive-sync.timer${RESET}"
@@ -132,6 +129,6 @@ echo ""
 echo -e "  ${CYAN}5.${RESET} Check timer status:"
 echo -e "       ${YELLOW}systemctl --user status onedrive-sync.timer${RESET}"
 echo ""
-echo -e "  ${CYAN}6.${RESET} Reload your shell to activate aliases:"
+echo -e "  ${CYAN}6.${RESET} Reload your shell to activate the alias:"
 echo -e "       ${YELLOW}source ~/.bashrc${RESET}  (or ~/.zshrc)"
 echo ""
