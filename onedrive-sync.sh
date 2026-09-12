@@ -1,8 +1,27 @@
 #!/usr/bin/env bash
 # =============================================================================
 # onedrive-sync.sh - Multi-folder OneDrive sync wrapper using rclone
+#
+# Usage:
+#   onedrive-sync.sh           - normal incremental bisync
+#   onedrive-sync.sh --resync  - full resync to (re)establish baseline
 # =============================================================================
 set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Argument parsing - --resync flag
+# ---------------------------------------------------------------------------
+RESYNC=false
+if [[ "${1:-}" == "--resync" ]]; then
+    RESYNC=true
+fi
+
+# ---------------------------------------------------------------------------
+# Network connectivity check - exit silently if offline
+# ---------------------------------------------------------------------------
+if ! ping -c 1 -W 2 1.1.1.1 &>/dev/null; then
+    exit 0
+fi
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -32,6 +51,22 @@ log_warn()  { log "WARN " "$@"; }
 log_error() { log "ERROR" "$@"; }
 
 # ---------------------------------------------------------------------------
+# Log rotation - truncate to last 1000 lines if log exceeds 5 MB
+# ---------------------------------------------------------------------------
+rotate_log_if_needed() {
+    local logfile="${1:-}"
+    [[ -z "$logfile" || ! -f "$logfile" ]] && return
+    local size
+    size=$(wc -c < "$logfile")
+    if (( size > 5242880 )); then
+        local tmp
+        tmp="$(mktemp)"
+        tail -n 1000 "$logfile" > "$tmp"
+        mv "$tmp" "$logfile"
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # Exclusive lock - only one instance at a time
 # ---------------------------------------------------------------------------
 exec 9> "$LOCK_FILE"
@@ -54,6 +89,7 @@ source "$CONFIG_FILE"
 # Ensure log directory exists when a log file is configured
 if [[ -n "${RCLONE_LOG_FILE:-}" ]]; then
     mkdir -p "$(dirname "$RCLONE_LOG_FILE")"
+    rotate_log_if_needed "$RCLONE_LOG_FILE"
 fi
 
 # ---------------------------------------------------------------------------
@@ -83,10 +119,14 @@ if [[ "$DRY_RUN" == "true" ]]; then
     log_warn "DRY_RUN=true - no changes will be made."
 fi
 
-# Append bisync-specific conflict resolution
+# Append bisync-specific conflict resolution, and --resync when requested
 BISYNC_FLAGS=()
 if [[ "$SYNC_MODE" == "bisync" ]]; then
     BISYNC_FLAGS+=("--conflict-resolve" "newer")
+    if [[ "$RESYNC" == "true" ]]; then
+        BISYNC_FLAGS+=("--resync")
+        log_warn "--resync requested: establishing/refreshing baseline."
+    fi
 fi
 
 # Split extra flags string into array safely
@@ -117,7 +157,7 @@ fi
 # ---------------------------------------------------------------------------
 OVERALL_START="$(date '+%Y-%m-%d %H:%M:%S')"
 log_info "========================================================"
-log_info "Starting $SCRIPT_NAME  |  mode=$SYNC_MODE  |  pairs=${#SYNC_PAIRS[@]}"
+log_info "Starting $SCRIPT_NAME  |  mode=$SYNC_MODE  |  resync=$RESYNC  |  pairs=${#SYNC_PAIRS[@]}"
 log_info "Started at: $OVERALL_START"
 log_info "========================================================"
 
@@ -175,6 +215,7 @@ if [[ "$EXIT_CODE" -eq 0 ]]; then
     log_info "Result: ALL PAIRS SUCCEEDED"
 else
     log_error "Result: ONE OR MORE PAIRS FAILED (see above)"
+    notify-send "OneDrive Sync Error" "Check logs" 2>/dev/null || true
 fi
 log_info "========================================================"
 
