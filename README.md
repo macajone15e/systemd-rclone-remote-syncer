@@ -171,3 +171,29 @@ To remove all installed files, systemd units, and shell aliases, run:
 ```bash
 bash uninstall.sh
 ```
+
+---
+
+## 7. Troubleshooting
+
+### Synchronization stuck at 0 B/s (Throttling)
+
+If your synchronization seems completely frozen (e.g., `0 B/s` for several minutes) despite having a working connection, it is likely due to **API throttling** from OneDrive. This usually happens when attempting to sync folders containing thousands of tiny files, such as Python virtual environments or large cache directories.
+
+To fix this:
+1. Cancel the current sync with `Ctrl+C`.
+2. Clear the residual lock file if it exists: `rm -f ~/.cache/rclone/bisync/*.lck`
+3. Edit your configuration file (`~/.config/onedrive-sync/config.env`) and add exclusions for those directories in `RCLONE_EXTRA_FLAGS`. For example, to exclude Python virtual environments:
+
+```bash
+RCLONE_EXTRA_FLAGS="--exclude='.git/**' --exclude='node_modules/**' --exclude='.venv/**' --exclude='venv/**' --exclude='__pycache__/**'"
+```
+
+4. Restart the initial sync with the `--resync` flag: `sync-onedrive --resync`
+
+### "prior lock file found" Error
+
+If rclone crashes or is interrupted, a lock file might be left behind. You will see an error like:
+`Failed to bisync: prior lock file found: /home/mac/.cache/rclone/bisync/...lck`
+
+Simply delete the `.lck` file mentioned in the error message and run the sync again.
