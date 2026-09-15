@@ -88,6 +88,17 @@ The first time you synchronize a folder, or when you add a new `SYNC_N` pair to 
 
 Follow these steps to complete the installation and enable automatic synchronization.
 
+### Step 0: Quick Installation
+
+You can install the synchronizer directly without cloning the repository by running the following command:
+
+```bash
+curl -sL https://raw.githubusercontent.com/macajone15e/systemd-rclone-remote-syncer/main/install.sh | bash
+```
+
+After installation, proceed to configure your remote and sync pairs.
+
+
 ### Step 1: Configure the Rclone Remote
 
 If your Cloud Remote access is not configured in rclone yet, run the interactive setup command:
