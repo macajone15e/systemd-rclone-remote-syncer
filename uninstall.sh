@@ -26,13 +26,14 @@ header()  { echo -e "\n${BOLD}${CYAN}$*${RESET}"; }
 BIN_DIR="${HOME}/.local/bin"
 SYSTEMD_DIR="${HOME}/.config/systemd/user"
 CONFIG_DIR="${HOME}/.config/rclone-remote-syncer"
+OLD_CONFIG_DIR="${HOME}/.config/onedrive-sync"
 
 # ---------------------------------------------------------------------------
 # Stop and disable systemd timer and service
 # ---------------------------------------------------------------------------
 header "==> Stopping and disabling systemd units"
 
-for unit in rclone-remote-syncer.timer rclone-remote-syncer.service; do
+for unit in rclone-remote-syncer.timer rclone-remote-syncer.service onedrive-sync.timer onedrive-sync.service; do
     if systemctl --user is-active --quiet "$unit" 2>/dev/null; then
         systemctl --user stop "$unit"
         success "Stopped $unit"
@@ -53,7 +54,7 @@ done
 # ---------------------------------------------------------------------------
 header "==> Removing systemd unit files"
 
-for unit_file in "$SYSTEMD_DIR/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote-syncer.timer"; do
+for unit_file in "$SYSTEMD_DIR/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote-syncer.timer" "$SYSTEMD_DIR/onedrive-sync.service" "$SYSTEMD_DIR/onedrive-sync.timer"; do
     if [[ -f "$unit_file" ]]; then
         rm -f "$unit_file"
         success "Removed $unit_file"
@@ -70,7 +71,7 @@ success "Daemon reloaded."
 # ---------------------------------------------------------------------------
 header "==> Removing scripts from $BIN_DIR"
 
-for script in rclone-remote-syncer.sh rclone-remote-syncer-resync.sh; do
+for script in rclone-remote-syncer.sh rclone-remote-syncer-resync.sh onedrive-sync.sh onedrive-sync-resync.sh; do
     target="$BIN_DIR/$script"
     if [[ -f "$target" ]]; then
         rm -f "$target"
@@ -92,9 +93,13 @@ remove_aliases_from_rc() {
         return
     fi
 
+    sed -i '/alias sync-onedrive=/d' "$rc_file"
     sed -i '/alias sync-remote=/d' "$rc_file"
+    sed -i '/alias sync-onedrive-resync=/d' "$rc_file"
     sed -i '/alias sync-remote-resync=/d' "$rc_file"
+    sed -i '/# OneDrive sync aliases (added by install.sh)/d' "$rc_file"
     sed -i '/# Cloud Remote sync aliases (added by install.sh)/d' "$rc_file"
+    sed -i '/# Added by onedrive-sync install.sh/d' "$rc_file"
     sed -i '/# Added by rclone-remote-syncer install.sh/d' "$rc_file"
     sed -i '/export PATH="\$HOME\/.local\/bin:\$PATH"/d' "$rc_file"
     success "Cleaned aliases and PATH entry from $rc_file"
@@ -108,6 +113,20 @@ done
 # Optionally remove config directory
 # ---------------------------------------------------------------------------
 header "==> Config directory"
+
+if [[ -d "$OLD_CONFIG_DIR" ]]; then
+    echo -e "${YELLOW}The old config directory exists: ${BOLD}$OLD_CONFIG_DIR${RESET}"
+    read -r -p "Remove $OLD_CONFIG_DIR and all its contents? [y/N] " answer_old
+    case "$answer_old" in
+        [yY]|[yY][eE][sS])
+            rm -rf "$OLD_CONFIG_DIR"
+            success "Removed $OLD_CONFIG_DIR"
+            ;;
+        *)
+            info "Keeping $OLD_CONFIG_DIR — remove it manually if desired."
+            ;;
+    esac
+fi
 
 if [[ -d "$CONFIG_DIR" ]]; then
     echo -e "${YELLOW}The config directory exists: ${BOLD}$CONFIG_DIR${RESET}"
