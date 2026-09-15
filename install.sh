@@ -7,6 +7,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ---------------------------------------------------------------------------
+# GitHub URL for curl-based installation
+# ---------------------------------------------------------------------------
+REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
+
+# ---------------------------------------------------------------------------
 # Colours
 # ---------------------------------------------------------------------------
 RED='\033[0;31m'
@@ -28,6 +33,24 @@ BIN_DIR="${HOME}/.local/bin"
 SYSTEMD_DIR="${HOME}/.config/systemd/user"
 CONFIG_DIR="${HOME}/.config/rclone-remote-syncer"
 
+# Helper to copy from local repo or download from GitHub
+fetch_or_copy() {
+    local src="$1"
+    local dest="$2"
+    local mode="$3"
+    
+    if [[ -f "$SCRIPT_DIR/$src" ]]; then
+        install -m "$mode" "$SCRIPT_DIR/$src" "$dest"
+    else
+        info "Downloading $src from GitHub..."
+        curl -sfL "$REPO_URL/$src" -o "$dest" || {
+            echo -e "${RED}[ERROR]${RESET} Failed to download $src. Make sure REPO_URL is correct."
+            exit 1
+        }
+        chmod "$mode" "$dest"
+    fi
+}
+
 header "==> Creating directories"
 mkdir -p "$BIN_DIR" "$SYSTEMD_DIR" "$CONFIG_DIR"
 success "Directories ready: $BIN_DIR, $SYSTEMD_DIR, $CONFIG_DIR"
@@ -36,15 +59,30 @@ success "Directories ready: $BIN_DIR, $SYSTEMD_DIR, $CONFIG_DIR"
 # Install scripts
 # ---------------------------------------------------------------------------
 header "==> Installing scripts to $BIN_DIR"
-install -m 755 "$SCRIPT_DIR/rclone-remote-syncer.sh" "$BIN_DIR/rclone-remote-syncer.sh"
+fetch_or_copy "rclone-remote-syncer.sh" "$BIN_DIR/rclone-remote-syncer.sh" 755
+
+# ---------------------------------------------------------------------------
+# GitHub URL for curl-based installation
+# ---------------------------------------------------------------------------
+REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
 success "Scripts installed."
 
 # ---------------------------------------------------------------------------
 # Install systemd units
 # ---------------------------------------------------------------------------
 header "==> Installing systemd units to $SYSTEMD_DIR"
-install -m 644 "$SCRIPT_DIR/systemd/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote-syncer.service"
-install -m 644 "$SCRIPT_DIR/systemd/rclone-remote-syncer.timer"   "$SYSTEMD_DIR/rclone-remote-syncer.timer"
+fetch_or_copy "systemd/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote-syncer.service" 644
+
+# ---------------------------------------------------------------------------
+# GitHub URL for curl-based installation
+# ---------------------------------------------------------------------------
+REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
+fetch_or_copy "systemd/rclone-remote-syncer.timer" "$SYSTEMD_DIR/rclone-remote-syncer.timer" 644
+
+# ---------------------------------------------------------------------------
+# GitHub URL for curl-based installation
+# ---------------------------------------------------------------------------
+REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
 systemctl --user daemon-reload
 success "Systemd units installed and daemon reloaded."
 
@@ -56,7 +94,12 @@ header "==> Config file"
 if [[ -f "$CONFIG_FILE" ]]; then
     warn "config.env already exists at $CONFIG_FILE — skipping (your settings are preserved)."
 else
-    install -m 600 "$SCRIPT_DIR/config.env.template" "$CONFIG_FILE"
+    fetch_or_copy "config.env.template" "$CONFIG_FILE" 600
+
+# ---------------------------------------------------------------------------
+# GitHub URL for curl-based installation
+# ---------------------------------------------------------------------------
+REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
     success "config.env installed to $CONFIG_FILE"
 fi
 
