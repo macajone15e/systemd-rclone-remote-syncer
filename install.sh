@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ---------------------------------------------------------------------------
 # GitHub URL for curl-based installation
 # ---------------------------------------------------------------------------
-REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
+REPO_URL="https://raw.githubusercontent.com/macajone15e/systemd-rclone-remote-syncer/main"
 
 # ---------------------------------------------------------------------------
 # Colours
@@ -64,7 +64,7 @@ fetch_or_copy "rclone-remote-syncer.sh" "$BIN_DIR/rclone-remote-syncer.sh" 755
 # ---------------------------------------------------------------------------
 # GitHub URL for curl-based installation
 # ---------------------------------------------------------------------------
-REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
+REPO_URL="https://raw.githubusercontent.com/macajone15e/systemd-rclone-remote-syncer/main"
 success "Scripts installed."
 
 # ---------------------------------------------------------------------------
@@ -76,13 +76,13 @@ fetch_or_copy "systemd/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote
 # ---------------------------------------------------------------------------
 # GitHub URL for curl-based installation
 # ---------------------------------------------------------------------------
-REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
+REPO_URL="https://raw.githubusercontent.com/macajone15e/systemd-rclone-remote-syncer/main"
 fetch_or_copy "systemd/rclone-remote-syncer.timer" "$SYSTEMD_DIR/rclone-remote-syncer.timer" 644
 
 # ---------------------------------------------------------------------------
 # GitHub URL for curl-based installation
 # ---------------------------------------------------------------------------
-REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
+REPO_URL="https://raw.githubusercontent.com/macajone15e/systemd-rclone-remote-syncer/main"
 systemctl --user daemon-reload
 success "Systemd units installed and daemon reloaded."
 
@@ -99,7 +99,7 @@ else
 # ---------------------------------------------------------------------------
 # GitHub URL for curl-based installation
 # ---------------------------------------------------------------------------
-REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/systemd-rclone-remote-syncer/main"
+REPO_URL="https://raw.githubusercontent.com/macajone15e/systemd-rclone-remote-syncer/main"
     success "config.env installed to $CONFIG_FILE"
 fi
 
