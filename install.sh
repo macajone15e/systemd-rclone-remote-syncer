@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# install.sh - Deploy OneDrive Linux Synchronizer to the current user account
+# install.sh - Deploy Cloud Remote Linux Synchronizer to the current user account
 # =============================================================================
 set -euo pipefail
 
@@ -26,7 +26,7 @@ header()  { echo -e "\n${BOLD}${CYAN}$*${RESET}"; }
 # ---------------------------------------------------------------------------
 BIN_DIR="${HOME}/.local/bin"
 SYSTEMD_DIR="${HOME}/.config/systemd/user"
-CONFIG_DIR="${HOME}/.config/onedrive-sync"
+CONFIG_DIR="${HOME}/.config/rclone-remote-syncer"
 
 header "==> Creating directories"
 mkdir -p "$BIN_DIR" "$SYSTEMD_DIR" "$CONFIG_DIR"
@@ -36,15 +36,15 @@ success "Directories ready: $BIN_DIR, $SYSTEMD_DIR, $CONFIG_DIR"
 # Install scripts
 # ---------------------------------------------------------------------------
 header "==> Installing scripts to $BIN_DIR"
-install -m 755 "$SCRIPT_DIR/onedrive-sync.sh" "$BIN_DIR/onedrive-sync.sh"
+install -m 755 "$SCRIPT_DIR/rclone-remote-syncer.sh" "$BIN_DIR/rclone-remote-syncer.sh"
 success "Scripts installed."
 
 # ---------------------------------------------------------------------------
 # Install systemd units
 # ---------------------------------------------------------------------------
 header "==> Installing systemd units to $SYSTEMD_DIR"
-install -m 644 "$SCRIPT_DIR/systemd/onedrive-sync.service" "$SYSTEMD_DIR/onedrive-sync.service"
-install -m 644 "$SCRIPT_DIR/systemd/onedrive-sync.timer"   "$SYSTEMD_DIR/onedrive-sync.timer"
+install -m 644 "$SCRIPT_DIR/systemd/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote-syncer.service"
+install -m 644 "$SCRIPT_DIR/systemd/rclone-remote-syncer.timer"   "$SYSTEMD_DIR/rclone-remote-syncer.timer"
 systemctl --user daemon-reload
 success "Systemd units installed and daemon reloaded."
 
@@ -65,13 +65,13 @@ fi
 # ---------------------------------------------------------------------------
 header "==> Adding shell aliases"
 
-ALIAS_SYNC='alias sync-onedrive="onedrive-sync.sh"'
+ALIAS_SYNC='alias sync-remote="rclone-remote-syncer.sh"'
 
 add_alias_to_rc() {
     local rc_file="$1"
     local alias_line="$2"
-    local alias_name="${alias_line%%=*}"          # e.g. "alias sync-onedrive"
-    alias_name="${alias_name#alias }"             # e.g. "sync-onedrive"
+    local alias_name="${alias_line%%=*}"          # e.g. "alias sync-remote"
+    alias_name="${alias_name#alias }"             # e.g. "sync-remote"
 
     if [[ ! -f "$rc_file" ]]; then
         return
@@ -81,7 +81,7 @@ add_alias_to_rc() {
         warn "Alias '${alias_name}' already exists in $rc_file — skipping."
     else
         echo "" >> "$rc_file"
-        echo "# OneDrive sync alias (added by install.sh)" >> "$rc_file"
+        echo "# Cloud Remote sync alias (added by install.sh)" >> "$rc_file"
         echo "$alias_line" >> "$rc_file"
         success "Added '$alias_name' alias to $rc_file"
     fi
@@ -95,7 +95,7 @@ done
 for RC in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     if [[ -f "$RC" ]] && ! grep -q "${BIN_DIR}" "$RC" 2>/dev/null; then
         echo "" >> "$RC"
-        echo "# Added by onedrive-sync install.sh" >> "$RC"
+        echo "# Added by rclone-remote-syncer install.sh" >> "$RC"
         echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$RC"
         success "Added $BIN_DIR to PATH in $RC"
     fi
@@ -106,12 +106,12 @@ done
 # ---------------------------------------------------------------------------
 echo ""
 echo -e "${BOLD}${GREEN}============================================================${RESET}"
-echo -e "${BOLD}${GREEN}  OneDrive Linux Synchronizer installed successfully!${RESET}"
+echo -e "${BOLD}${GREEN}  Cloud Remote Linux Synchronizer installed successfully!${RESET}"
 echo -e "${BOLD}${GREEN}============================================================${RESET}"
 echo ""
 echo -e "${BOLD}Next steps:${RESET}"
 echo ""
-echo -e "  ${CYAN}1.${RESET} Configure your rclone OneDrive remote (if not done yet):"
+echo -e "  ${CYAN}1.${RESET} Configure your rclone Cloud Remote remote (if not done yet):"
 echo -e "       ${YELLOW}rclone config${RESET}"
 echo ""
 echo -e "  ${CYAN}2.${RESET} Edit the sync configuration file:"
@@ -119,15 +119,15 @@ echo -e "       ${YELLOW}${CONFIG_FILE}${RESET}"
 echo -e "     Set your SYNC_1, SYNC_2 … pairs (local_path:remote:remote_path)."
 echo ""
 echo -e "  ${CYAN}3.${RESET} Run the initial baseline sync (required before scheduling):"
-echo -e "       ${YELLOW}${BIN_DIR}/onedrive-sync.sh --resync${RESET}"
+echo -e "       ${YELLOW}${BIN_DIR}/rclone-remote-syncer.sh --resync${RESET}"
 echo -e "     Or, after reloading your shell:"
-echo -e "       ${YELLOW}sync-onedrive --resync${RESET}"
+echo -e "       ${YELLOW}sync-remote --resync${RESET}"
 echo ""
 echo -e "  ${CYAN}4.${RESET} Enable and start the automatic timer:"
-echo -e "       ${YELLOW}systemctl --user enable --now onedrive-sync.timer${RESET}"
+echo -e "       ${YELLOW}systemctl --user enable --now rclone-remote-syncer.timer${RESET}"
 echo ""
 echo -e "  ${CYAN}5.${RESET} Check timer status:"
-echo -e "       ${YELLOW}systemctl --user status onedrive-sync.timer${RESET}"
+echo -e "       ${YELLOW}systemctl --user status rclone-remote-syncer.timer${RESET}"
 echo ""
 echo -e "  ${CYAN}6.${RESET} Reload your shell to activate the alias:"
 echo -e "       ${YELLOW}source ~/.bashrc${RESET}  (or ~/.zshrc)"

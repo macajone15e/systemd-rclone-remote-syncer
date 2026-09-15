@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# uninstall.sh - Remove OneDrive Linux Synchronizer from the current user account
+# uninstall.sh - Remove Cloud Remote Linux Synchronizer from the current user account
 # Reverses the effects of install.sh
 # =============================================================================
 set -euo pipefail
@@ -25,14 +25,14 @@ header()  { echo -e "\n${BOLD}${CYAN}$*${RESET}"; }
 # ---------------------------------------------------------------------------
 BIN_DIR="${HOME}/.local/bin"
 SYSTEMD_DIR="${HOME}/.config/systemd/user"
-CONFIG_DIR="${HOME}/.config/onedrive-sync"
+CONFIG_DIR="${HOME}/.config/rclone-remote-syncer"
 
 # ---------------------------------------------------------------------------
 # Stop and disable systemd timer and service
 # ---------------------------------------------------------------------------
 header "==> Stopping and disabling systemd units"
 
-for unit in onedrive-sync.timer onedrive-sync.service; do
+for unit in rclone-remote-syncer.timer rclone-remote-syncer.service; do
     if systemctl --user is-active --quiet "$unit" 2>/dev/null; then
         systemctl --user stop "$unit"
         success "Stopped $unit"
@@ -53,7 +53,7 @@ done
 # ---------------------------------------------------------------------------
 header "==> Removing systemd unit files"
 
-for unit_file in "$SYSTEMD_DIR/onedrive-sync.service" "$SYSTEMD_DIR/onedrive-sync.timer"; do
+for unit_file in "$SYSTEMD_DIR/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote-syncer.timer"; do
     if [[ -f "$unit_file" ]]; then
         rm -f "$unit_file"
         success "Removed $unit_file"
@@ -70,7 +70,7 @@ success "Daemon reloaded."
 # ---------------------------------------------------------------------------
 header "==> Removing scripts from $BIN_DIR"
 
-for script in onedrive-sync.sh onedrive-sync-resync.sh; do
+for script in rclone-remote-syncer.sh rclone-remote-syncer-resync.sh; do
     target="$BIN_DIR/$script"
     if [[ -f "$target" ]]; then
         rm -f "$target"
@@ -92,10 +92,10 @@ remove_aliases_from_rc() {
         return
     fi
 
-    sed -i '/alias sync-onedrive=/d' "$rc_file"
-    sed -i '/alias sync-onedrive-resync=/d' "$rc_file"
-    sed -i '/# OneDrive sync aliases (added by install.sh)/d' "$rc_file"
-    sed -i '/# Added by onedrive-sync install.sh/d' "$rc_file"
+    sed -i '/alias sync-remote=/d' "$rc_file"
+    sed -i '/alias sync-remote-resync=/d' "$rc_file"
+    sed -i '/# Cloud Remote sync aliases (added by install.sh)/d' "$rc_file"
+    sed -i '/# Added by rclone-remote-syncer install.sh/d' "$rc_file"
     sed -i '/export PATH="\$HOME\/.local\/bin:\$PATH"/d' "$rc_file"
     success "Cleaned aliases and PATH entry from $rc_file"
 }
@@ -132,7 +132,7 @@ fi
 # ---------------------------------------------------------------------------
 echo ""
 echo -e "${BOLD}${GREEN}============================================================${RESET}"
-echo -e "${BOLD}${GREEN}  OneDrive Linux Synchronizer uninstalled successfully!${RESET}"
+echo -e "${BOLD}${GREEN}  Cloud Remote Linux Synchronizer uninstalled successfully!${RESET}"
 echo -e "${BOLD}${GREEN}============================================================${RESET}"
 echo ""
 echo -e "${BOLD}Reload your shell to deactivate aliases:${RESET}"

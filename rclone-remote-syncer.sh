@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
-# onedrive-sync.sh - Multi-folder OneDrive sync wrapper using rclone
+# rclone-remote-syncer.sh - Multi-folder Cloud Remote sync wrapper using rclone
 #
 # Usage:
-#   onedrive-sync.sh           - normal incremental bisync
-#   onedrive-sync.sh --resync  - full resync to (re)establish baseline
+#   rclone-remote-syncer.sh           - normal incremental bisync
+#   rclone-remote-syncer.sh --resync  - full resync to (re)establish baseline
 # =============================================================================
 set -euo pipefail
 
@@ -26,8 +26,8 @@ fi
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-CONFIG_FILE="${HOME}/.config/onedrive-sync/config.env"
-LOCK_FILE="/tmp/onedrive-sync.lock"
+CONFIG_FILE="${HOME}/.config/rclone-remote-syncer/config.env"
+LOCK_FILE="/tmp/rclone-remote-syncer.lock"
 SCRIPT_NAME="$(basename "$0")"
 
 # ---------------------------------------------------------------------------
@@ -215,7 +215,7 @@ if [[ "$EXIT_CODE" -eq 0 ]]; then
     log_info "Result: ALL PAIRS SUCCEEDED"
 else
     log_error "Result: ONE OR MORE PAIRS FAILED (see above)"
-    notify-send "OneDrive Sync Error" "Check logs" 2>/dev/null || true
+    notify-send "Cloud Remote Sync Error" "Check logs" 2>/dev/null || true
 fi
 log_info "========================================================"
 
