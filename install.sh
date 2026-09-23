@@ -56,6 +56,32 @@ mkdir -p "$BIN_DIR" "$SYSTEMD_DIR" "$CONFIG_DIR"
 success "Directories ready: $BIN_DIR, $SYSTEMD_DIR, $CONFIG_DIR"
 
 # ---------------------------------------------------------------------------
+# Install dependencies
+# ---------------------------------------------------------------------------
+header "==> Checking dependencies"
+if ! command -v notify-send &>/dev/null; then
+    info "notify-send is not installed. Attempting to install it for KDE/Desktop notifications..."
+    if command -v zypper &>/dev/null; then
+        info "Detected openSUSE/SUSE. Installing libnotify-tools..."
+        sudo zypper install -y libnotify-tools || warn "Failed to install libnotify-tools. Notifications might not work."
+    elif command -v apt-get &>/dev/null; then
+        info "Detected Debian/Ubuntu. Installing libnotify-bin..."
+        sudo apt-get update && sudo apt-get install -y libnotify-bin || warn "Failed to install libnotify-bin. Notifications might not work."
+    elif command -v pacman &>/dev/null; then
+        info "Detected Arch Linux. Installing libnotify..."
+        sudo pacman -S --noconfirm libnotify || warn "Failed to install libnotify. Notifications might not work."
+    elif command -v dnf &>/dev/null; then
+        info "Detected Fedora/RHEL. Installing libnotify..."
+        sudo dnf install -y libnotify || warn "Failed to install libnotify. Notifications might not work."
+    else
+        warn "Could not detect package manager. Please install 'notify-send' manually."
+    fi
+else
+    success "notify-send is already installed."
+fi
+
+
+# ---------------------------------------------------------------------------
 # Install scripts
 # ---------------------------------------------------------------------------
 header "==> Installing scripts to $BIN_DIR"
@@ -109,6 +135,7 @@ fi
 header "==> Adding shell aliases"
 
 ALIAS_SYNC='alias sync-remote="rclone-remote-syncer.sh"'
+ALIAS_RESYNC='alias sync-remote-resync="rclone-remote-syncer.sh --resync"'
 
 add_alias_to_rc() {
     local rc_file="$1"
@@ -132,6 +159,7 @@ add_alias_to_rc() {
 
 for RC in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     add_alias_to_rc "$RC" "$ALIAS_SYNC"
+    add_alias_to_rc "$RC" "$ALIAS_RESYNC"
 done
 
 # Also ensure BIN_DIR is in PATH for shells that don't include it automatically
@@ -164,7 +192,7 @@ echo ""
 echo -e "  ${CYAN}3.${RESET} Run the initial baseline sync (required before scheduling):"
 echo -e "       ${YELLOW}${BIN_DIR}/rclone-remote-syncer.sh --resync${RESET}"
 echo -e "     Or, after reloading your shell:"
-echo -e "       ${YELLOW}sync-remote --resync${RESET}"
+echo -e "       ${YELLOW}sync-remote-resync${RESET}"
 echo ""
 echo -e "  ${CYAN}4.${RESET} Enable and start the automatic timer:"
 echo -e "       ${YELLOW}systemctl --user enable --now rclone-remote-syncer.timer${RESET}"

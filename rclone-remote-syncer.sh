@@ -213,9 +213,27 @@ log_info "Started:  $OVERALL_START"
 log_info "Finished: $OVERALL_END"
 if [[ "$EXIT_CODE" -eq 0 ]]; then
     log_info "Result: ALL PAIRS SUCCEEDED"
+    if [[ "${NOTIFY_ON_SUCCESS:-true}" == "true" ]]; then
+        notify-send \
+            --app-name="Cloud Remote Sync" \
+            --icon="dialog-information" \
+            "Sync Successful" \
+            "All folders synchronized successfully." 2>/dev/null || true
+    fi
 else
     log_error "Result: ONE OR MORE PAIRS FAILED (see above)"
-    notify-send "Cloud Remote Sync Error" "Check logs" 2>/dev/null || true
+    ACTION=$(notify-send -w \
+        --app-name="Cloud Remote Sync" \
+        --icon="dialog-error" \
+        --urgency=critical \
+        --action="resync=Resync" \
+        "Sync Failed" \
+        "One or more folders failed to sync. Click Resync to re-establish the baseline." 2>/dev/null || true)
+
+    if [[ "$ACTION" == "resync" ]]; then
+        log_warn "User requested resync from notification action."
+        exec "$0" --resync
+    fi
 fi
 log_info "========================================================"
 

@@ -14,7 +14,7 @@ The script also includes the following built-in features:
 
 * **Offline check**: skips the sync silently if no network connectivity is detected (ping to `1.1.1.1`).
 * **Log rotation**: automatically truncates the log file to the last 1000 lines when it exceeds 5 MB.
-* **Desktop notifications**: sends a `notify-send` alert on sync failure.
+* **Desktop notifications**: sends a `notify-send` alert on sync failure. In environments like KDE Plasma, the notification includes an interactive **"Ré-synchroniser"** (Resync) button. Clicking it automatically restarts the synchronization in `--resync` mode to fix state issues and establish a new baseline.
 * **Uninstaller**: run `uninstall.sh` to cleanly remove all installed files, systemd units, and shell aliases.
 
 ---
@@ -133,7 +133,7 @@ Make sure the variables (`SYNC_1`, `SYNC_2`, etc.) match your actual local and r
 Run the resynchronization manually to create the initial baseline:
 
 ```bash
-sync-remote --resync
+sync-remote-resync
 ```
 
 Or, if the alias is not yet active in your current shell:
@@ -175,7 +175,29 @@ tail -f ~/.config/rclone-remote-syncer/sync.log
 
 ---
 
-## 6. Uninstalling
+## 6. Updating
+
+To update the synchronizer to the latest version, run:
+
+```bash
+bash update.sh
+```
+
+You can also target a specific release tag by passing it as an argument:
+
+```bash
+bash update.sh v1.1.0
+```
+
+The script will:
+- Verify the tag against GitHub releases.
+- Backup your existing `config.env` (e.g. `config.env_backup_latest`).
+- Download the updated scripts and systemd units.
+- Reload the systemd daemon automatically.
+
+---
+
+## 7. Uninstalling
 
 To remove all installed files, systemd units, and shell aliases, run:
 
@@ -185,7 +207,7 @@ bash uninstall.sh
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 ### Synchronization stuck at 0 B/s (Throttling)
 
@@ -200,7 +222,7 @@ To fix this:
 RCLONE_EXTRA_FLAGS="--exclude='.git/**' --exclude='node_modules/**' --exclude='.venv/**' --exclude='venv/**' --exclude='__pycache__/**'"
 ```
 
-4. Restart the initial sync with the `--resync` flag: `sync-remote --resync`
+4. Restart the initial sync with the `--resync` flag: `sync-remote-resync`
 
 ### "prior lock file found" Error
 
