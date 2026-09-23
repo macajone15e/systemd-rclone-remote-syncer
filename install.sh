@@ -56,6 +56,32 @@ mkdir -p "$BIN_DIR" "$SYSTEMD_DIR" "$CONFIG_DIR"
 success "Directories ready: $BIN_DIR, $SYSTEMD_DIR, $CONFIG_DIR"
 
 # ---------------------------------------------------------------------------
+# Install dependencies
+# ---------------------------------------------------------------------------
+header "==> Checking dependencies"
+if ! command -v notify-send &>/dev/null; then
+    info "notify-send is not installed. Attempting to install it for KDE/Desktop notifications..."
+    if command -v zypper &>/dev/null; then
+        info "Detected openSUSE/SUSE. Installing libnotify-tools..."
+        sudo zypper install -y libnotify-tools || warn "Failed to install libnotify-tools. Notifications might not work."
+    elif command -v apt-get &>/dev/null; then
+        info "Detected Debian/Ubuntu. Installing libnotify-bin..."
+        sudo apt-get update && sudo apt-get install -y libnotify-bin || warn "Failed to install libnotify-bin. Notifications might not work."
+    elif command -v pacman &>/dev/null; then
+        info "Detected Arch Linux. Installing libnotify..."
+        sudo pacman -S --noconfirm libnotify || warn "Failed to install libnotify. Notifications might not work."
+    elif command -v dnf &>/dev/null; then
+        info "Detected Fedora/RHEL. Installing libnotify..."
+        sudo dnf install -y libnotify || warn "Failed to install libnotify. Notifications might not work."
+    else
+        warn "Could not detect package manager. Please install 'notify-send' manually."
+    fi
+else
+    success "notify-send is already installed."
+fi
+
+
+# ---------------------------------------------------------------------------
 # Install scripts
 # ---------------------------------------------------------------------------
 header "==> Installing scripts to $BIN_DIR"
