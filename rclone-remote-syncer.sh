@@ -215,7 +215,18 @@ if [[ "$EXIT_CODE" -eq 0 ]]; then
     log_info "Result: ALL PAIRS SUCCEEDED"
 else
     log_error "Result: ONE OR MORE PAIRS FAILED (see above)"
-    notify-send "Cloud Remote Sync Error" "Check logs" 2>/dev/null || true
+    ACTION=$(notify-send \
+        --app-name="Cloud Remote Sync" \
+        --icon="dialog-error" \
+        --urgency=critical \
+        --action="resync=Ré-synchroniser" \
+        "Échec de la synchronisation" \
+        "Un ou plusieurs dossiers n'ont pas pu être synchronisés. Cliquez sur Ré-synchroniser pour réinitialiser la baseline." 2>/dev/null || true)
+
+    if [[ "$ACTION" == "resync" ]]; then
+        log_warn "User requested resync from notification action."
+        exec "$0" --resync
+    fi
 fi
 log_info "========================================================"
 

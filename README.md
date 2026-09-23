@@ -14,7 +14,7 @@ The script also includes the following built-in features:
 
 * **Offline check**: skips the sync silently if no network connectivity is detected (ping to `1.1.1.1`).
 * **Log rotation**: automatically truncates the log file to the last 1000 lines when it exceeds 5 MB.
-* **Desktop notifications**: sends a `notify-send` alert on sync failure.
+* **Desktop notifications**: sends a `notify-send` alert on sync failure. In environments like KDE Plasma, the notification includes an interactive **"Ré-synchroniser"** (Resync) button. Clicking it automatically restarts the synchronization in `--resync` mode to fix state issues and establish a new baseline.
 * **Uninstaller**: run `uninstall.sh` to cleanly remove all installed files, systemd units, and shell aliases.
 
 ---
