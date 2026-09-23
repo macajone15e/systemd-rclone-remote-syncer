@@ -215,7 +215,7 @@ if [[ "$EXIT_CODE" -eq 0 ]]; then
     log_info "Result: ALL PAIRS SUCCEEDED"
 else
     log_error "Result: ONE OR MORE PAIRS FAILED (see above)"
-    ACTION=$(notify-send \
+    ACTION=$(notify-send -w \
         --app-name="Cloud Remote Sync" \
         --icon="dialog-error" \
         --urgency=critical \

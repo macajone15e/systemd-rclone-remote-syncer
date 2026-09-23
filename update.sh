@@ -33,8 +33,8 @@ if [[ "$TARGET_TAG" == "latest" ]]; then
     success "Latest tag is $TARGET_TAG"
 else
     info "Verifying tag $TARGET_TAG..."
-    if ! curl -sLf -o /dev/null "https://api.github.com/repos/$REPO/releases/tags/$TARGET_TAG"; then
-        error "Tag $TARGET_TAG not found."
+    if ! curl -sLf -o /dev/null "https://raw.githubusercontent.com/$REPO/$TARGET_TAG/rclone-remote-syncer.sh"; then
+        error "Release/Tag $TARGET_TAG not found or not accessible."
         exit 1
     fi
     success "Tag $TARGET_TAG verified."
