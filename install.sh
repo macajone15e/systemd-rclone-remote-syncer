@@ -109,6 +109,7 @@ fi
 header "==> Adding shell aliases"
 
 ALIAS_SYNC='alias sync-remote="rclone-remote-syncer.sh"'
+ALIAS_RESYNC='alias sync-remote-resync="rclone-remote-syncer.sh --resync"'
 
 add_alias_to_rc() {
     local rc_file="$1"
@@ -132,6 +133,7 @@ add_alias_to_rc() {
 
 for RC in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     add_alias_to_rc "$RC" "$ALIAS_SYNC"
+    add_alias_to_rc "$RC" "$ALIAS_RESYNC"
 done
 
 # Also ensure BIN_DIR is in PATH for shells that don't include it automatically
@@ -164,7 +166,7 @@ echo ""
 echo -e "  ${CYAN}3.${RESET} Run the initial baseline sync (required before scheduling):"
 echo -e "       ${YELLOW}${BIN_DIR}/rclone-remote-syncer.sh --resync${RESET}"
 echo -e "     Or, after reloading your shell:"
-echo -e "       ${YELLOW}sync-remote --resync${RESET}"
+echo -e "       ${YELLOW}sync-remote-resync${RESET}"
 echo ""
 echo -e "  ${CYAN}4.${RESET} Enable and start the automatic timer:"
 echo -e "       ${YELLOW}systemctl --user enable --now rclone-remote-syncer.timer${RESET}"
