@@ -72,6 +72,41 @@ systemctl --user daemon-reload
 systemctl --user enable --now rclone-remote-syncer.timer
 success "Systemd units reloaded and timer started."
 
+echo -e "\n${BOLD}${CYAN}==> Updating shell aliases${RESET}"
+ALIAS_SYNC='alias sync-remote="rclone-remote-syncer.sh"'
+ALIAS_RESYNC='alias sync-remote-resync="rclone-remote-syncer.sh --resync"'
+ALIAS_OFF='alias sync-remote-off="systemctl --user stop rclone-remote-syncer.timer"'
+ALIAS_ON='alias sync-remote-on="systemctl --user start rclone-remote-syncer.timer"'
+ALIAS_STATUS='alias sync-remote-status="systemctl --user status rclone-remote-syncer.timer"'
+ALIAS_LOGS='alias sync-remote-logs="journalctl --user -u rclone-remote-syncer.service -f"'
+
+add_alias_to_rc() {
+    local rc_file="$1"
+    local alias_line="$2"
+    local alias_name="${alias_line%%=*}"
+    alias_name="${alias_name#alias }"
+
+    if [[ ! -f "$rc_file" ]]; then
+        return
+    fi
+
+    if ! grep -q "alias ${alias_name}=" "$rc_file" 2>/dev/null; then
+        echo "" >> "$rc_file"
+        echo "# Cloud Remote sync alias (added by update.sh)" >> "$rc_file"
+        echo "$alias_line" >> "$rc_file"
+        success "Added '$alias_name' alias to $rc_file"
+    fi
+}
+
+for RC in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
+    add_alias_to_rc "$RC" "$ALIAS_SYNC"
+    add_alias_to_rc "$RC" "$ALIAS_RESYNC"
+    add_alias_to_rc "$RC" "$ALIAS_OFF"
+    add_alias_to_rc "$RC" "$ALIAS_ON"
+    add_alias_to_rc "$RC" "$ALIAS_STATUS"
+    add_alias_to_rc "$RC" "$ALIAS_LOGS"
+done
+
 echo ""
 echo -e "${BOLD}${GREEN}============================================================${RESET}"
 echo -e "${BOLD}${GREEN}  Updated successfully to $TARGET_TAG!${RESET}"
