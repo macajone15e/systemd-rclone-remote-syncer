@@ -69,7 +69,8 @@ fetch_file "systemd/rclone-remote-syncer.service" "$SYSTEMD_DIR/rclone-remote-sy
 fetch_file "systemd/rclone-remote-syncer.timer" "$SYSTEMD_DIR/rclone-remote-syncer.timer" 644
 
 systemctl --user daemon-reload
-success "Systemd units reloaded."
+systemctl --user enable --now rclone-remote-syncer.timer
+success "Systemd units reloaded and timer started."
 
 echo ""
 echo -e "${BOLD}${GREEN}============================================================${RESET}"

@@ -110,7 +110,8 @@ fetch_or_copy "systemd/rclone-remote-syncer.timer" "$SYSTEMD_DIR/rclone-remote-s
 # ---------------------------------------------------------------------------
 REPO_URL="https://raw.githubusercontent.com/macajone15e/systemd-rclone-remote-syncer/main"
 systemctl --user daemon-reload
-success "Systemd units installed and daemon reloaded."
+systemctl --user enable --now rclone-remote-syncer.timer
+success "Systemd units installed, daemon reloaded, and timer started."
 
 # ---------------------------------------------------------------------------
 # Config file (never overwrite if it already exists)
@@ -136,6 +137,10 @@ header "==> Adding shell aliases"
 
 ALIAS_SYNC='alias sync-remote="rclone-remote-syncer.sh"'
 ALIAS_RESYNC='alias sync-remote-resync="rclone-remote-syncer.sh --resync"'
+ALIAS_OFF='alias sync-remote-off="systemctl --user stop rclone-remote-syncer.timer"'
+ALIAS_ON='alias sync-remote-on="systemctl --user start rclone-remote-syncer.timer"'
+ALIAS_STATUS='alias sync-remote-status="systemctl --user status rclone-remote-syncer.timer"'
+ALIAS_LOGS='alias sync-remote-logs="journalctl --user -u rclone-remote-syncer.service -f"'
 
 add_alias_to_rc() {
     local rc_file="$1"
@@ -160,6 +165,10 @@ add_alias_to_rc() {
 for RC in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
     add_alias_to_rc "$RC" "$ALIAS_SYNC"
     add_alias_to_rc "$RC" "$ALIAS_RESYNC"
+    add_alias_to_rc "$RC" "$ALIAS_OFF"
+    add_alias_to_rc "$RC" "$ALIAS_ON"
+    add_alias_to_rc "$RC" "$ALIAS_STATUS"
+    add_alias_to_rc "$RC" "$ALIAS_LOGS"
 done
 
 # Also ensure BIN_DIR is in PATH for shells that don't include it automatically
@@ -194,12 +203,13 @@ echo -e "       ${YELLOW}${BIN_DIR}/rclone-remote-syncer.sh --resync${RESET}"
 echo -e "     Or, after reloading your shell:"
 echo -e "       ${YELLOW}sync-remote-resync${RESET}"
 echo ""
-echo -e "  ${CYAN}4.${RESET} Enable and start the automatic timer:"
-echo -e "       ${YELLOW}systemctl --user enable --now rclone-remote-syncer.timer${RESET}"
+echo -e "  ${CYAN}4.${RESET} The background sync timer has been automatically started."
+echo -e "     Use these new aliases to manage it:"
+echo -e "       - ${YELLOW}sync-remote-off${RESET}    : Stop the background sync"
+echo -e "       - ${YELLOW}sync-remote-on${RESET}     : Start the background sync"
+echo -e "       - ${YELLOW}sync-remote-status${RESET} : Check if it is running"
+echo -e "       - ${YELLOW}sync-remote-logs${RESET}   : View sync logs"
 echo ""
-echo -e "  ${CYAN}5.${RESET} Check timer status:"
-echo -e "       ${YELLOW}systemctl --user status rclone-remote-syncer.timer${RESET}"
-echo ""
-echo -e "  ${CYAN}6.${RESET} Reload your shell to activate the alias:"
+echo -e "  ${CYAN}5.${RESET} Reload your shell to activate the aliases:"
 echo -e "       ${YELLOW}source ~/.bashrc${RESET}  (or ~/.zshrc)"
 echo ""
